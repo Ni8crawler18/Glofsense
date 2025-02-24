@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 import pickle
 
 # Load dataset
-df = pd.read_csv("data/south_lhonak_glof_samples.csv")
+df = pd.read_csv("south_lhonak_glof_samples.csv")
 
 # Preprocess dataset (encode categorical labels)
 df['glof_risk'] = df['glof_risk'].map({'Low': 0, 'Medium': 1, 'High': 2})
