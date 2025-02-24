@@ -1,48 +1,115 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Thermometer, Droplets, Mountain, Compass, Activity, Waves } from 'lucide-react';
+import { ref, onValue } from "firebase/database";
+import { database } from '../firebase';
 
 interface SensorDashboardProps {
   selectedLake: string;
 }
 
 const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
-  // Enhanced mock data with more realistic values
-  const sensorData = {
-    floating: {
-      altitude: 4523,
-      humidity: 65.8,
-      latitude: 36.3219,
-      longitude: 74.8707,
-      temperature: 12.3,
-      waterTemperature: 4.2,
-      gyro: { x: 0.23, y: -0.12, z: 0.05 }
-    },
-    moraine: {
-      humidity: 58.4,
-      temperature: 15.2,
-      vibration: 0.034
+  const [latestSensor, setLatestSensor] = useState<any>(null);
+  const [timeRange, setTimeRange] = useState('all');
+  const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
+  const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
+  const [gyroGraphData, setGyroGraphData] = useState<any[]>([]);
+  const [showGyroGraph, setShowGyroGraph] = useState(false);
+  const [locationName, setLocationName] = useState<string>("");
+
+  useEffect(() => {
+    const userId = "ggVVdic7v3gqsBkbQIRYWvlxOFo2"; // Replace with actual user ID
+    const dataRef = ref(database, `UsersData/${userId}/readings`);
+
+    const unsubscribe = onValue(
+      dataRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        console.log("Fetched data:", data); // Log fetched data
+
+        if (!data) {
+          console.error("No data found");
+          return;
+        }
+
+        const sensorEntries = Object.entries(data);
+        if (sensorEntries.length === 0) {
+          console.error("No sensor readings available");
+          return;
+        }
+
+        sensorEntries.sort(([a], [b]) => Number(a) - Number(b));
+
+        const [latestTimestamp, latestValues] = sensorEntries[sensorEntries.length - 1];
+        const { floatLatitude, floatLongitude, ...filteredValues } = latestValues;
+        setLatestSensor({ timestamp: latestTimestamp, ...filteredValues });
+
+        console.log("Latest sensor values:", filteredValues); // Log latest sensor values
+
+        fetchLocationName(parseFloat(latestValues.floatLatitude), parseFloat(latestValues.floatLongitude));
+        updateGraphData(sensorEntries, timeRange);
+      },
+      (error) => {
+        console.error("Error fetching data:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [timeRange]);
+
+  const fetchLocationName = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        setLocationName(data.display_name.split(",")[0]);
+      } else {
+        setLocationName("Location not found");
+      }
+    } catch (error) {
+      console.error("Error fetching location name:", error);
+      setLocationName("Error fetching location");
     }
   };
 
-  // More realistic time series data
-  const timeSeriesData = [
-    { time: '00:00', temp: 10.2, waterTemp: 3.8, humidity: 62.5 },
-    { time: '04:00', temp: 8.7, waterTemp: 3.5, humidity: 65.2 },
-    { time: '08:00', temp: 12.4, waterTemp: 4.1, humidity: 60.8 },
-    { time: '12:00', temp: 15.6, waterTemp: 4.3, humidity: 55.3 },
-    { time: '16:00', temp: 14.2, waterTemp: 4.2, humidity: 58.7 },
-    { time: '20:00', temp: 11.8, waterTemp: 3.9, humidity: 63.1 }
-  ];
+  const updateGraphData = (data: any[], range: string) => {
+    const now = Date.now() / 1000;
+    let filteredData;
 
-  const vibrationData = [
-    { time: '00:00', value: 0.031 },
-    { time: '04:00', value: 0.028 },
-    { time: '08:00', value: 0.035 },
-    { time: '12:00', value: 0.042 },
-    { time: '16:00', value: 0.038 },
-    { time: '20:00', value: 0.033 }
-  ];
+    switch (range) {
+      case "hour":
+        filteredData = data.filter(([timestamp]) => now - Number(timestamp) <= 3600);
+        break;
+      case "day":
+      case "week":
+        filteredData = data.filter(([timestamp]) => now - Number(timestamp) <= 604800);
+        break;
+      case "all":
+        filteredData = data;
+        break;
+      default:
+        filteredData = data;
+    }
+
+    const formattedFloatData = filteredData.map(([timestamp, values]) => ({
+      time: new Date(Number(timestamp) * 1000).toLocaleString(),
+      temperature: parseFloat(values.floatTemperature || 0),
+      humidity: parseFloat(values.floatHumidity || 0),
+      waterTemperature: parseFloat(values.floatWaterTemperature || 0)
+    }));
+
+    const formattedShoreData = filteredData.map(([timestamp, values]) => ({
+      time: new Date(Number(timestamp) * 1000).toLocaleString(),
+      temperature: parseFloat(values.shoreTemperature || 0),
+      humidity: parseFloat(values.shoreHumidity || 0),
+      vibration: parseFloat(values.shoreVibration || 0)
+    }));
+
+    setFloatGraphData(formattedFloatData);
+    setShoreGraphData(formattedShoreData);
+  };
 
   const riskLevel = "medium";
   const riskColor = {
@@ -53,6 +120,18 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end mb-4">
+        <select
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+          className="p-2 border border-gray-300 rounded-md"
+        >
+          <option value="hour">Last Hour</option>
+          <option value="day">Last Day</option>
+          <option value="week">Last Week</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Floating Sensors */}
         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -66,28 +145,28 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 <Mountain className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Altitude</span>
               </div>
-              <span className="font-semibold">{sensorData.floating.altitude.toFixed(0)}m</span>
+              <span className="font-semibold">{typeof latestSensor?.floatAltitude === 'string' ? parseFloat(latestSensor.floatAltitude).toFixed(0) : 'N/A'}m</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
               <div className="flex items-center">
                 <Droplets className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Humidity</span>
               </div>
-              <span className="font-semibold">{sensorData.floating.humidity.toFixed(1)}%</span>
+              <span className="font-semibold">{typeof latestSensor?.floatHumidity === 'string' ? parseFloat(latestSensor.floatHumidity).toFixed(1) : 'N/A'}%</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
               <div className="flex items-center">
                 <Thermometer className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Temperature</span>
               </div>
-              <span className="font-semibold">{sensorData.floating.temperature.toFixed(1)}°C</span>
+              <span className="font-semibold">{typeof latestSensor?.floatTemperature === 'string' ? parseFloat(latestSensor.floatTemperature).toFixed(1) : 'N/A'}°C</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
               <div className="flex items-center">
                 <Thermometer className="w-5 h-5 text-blue-500 mr-2" />
                 <span className="text-gray-600">Water Temp</span>
               </div>
-              <span className="font-semibold">{sensorData.floating.waterTemperature.toFixed(1)}°C</span>
+              <span className="font-semibold">{typeof latestSensor?.floatWaterTemperature === 'string' ? parseFloat(latestSensor.floatWaterTemperature).toFixed(1) : 'N/A'}°C</span>
             </div>
           </div>
         </div>
@@ -99,13 +178,13 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
             <h3 className="text-lg font-semibold">Gyroscope Data</h3>
           </div>
           <div className="space-y-4">
-            {Object.entries(sensorData.floating.gyro).map(([axis, value]) => (
+            {['X', 'Y', 'Z'].map(axis => (
               <div key={axis} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                 <div className="flex items-center">
                   <Activity className="w-5 h-5 text-gray-600 mr-2" />
-                  <span className="text-gray-600">{axis.toUpperCase()}-axis</span>
+                  <span className="text-gray-600">{axis}-axis</span>
                 </div>
-                <span className="font-semibold">{value.toFixed(3)}</span>
+                <span className="font-semibold">{typeof latestSensor?.[`float${axis}-Axis`] === 'string' ? parseFloat(latestSensor[`float${axis}-Axis`]).toFixed(3) : 'N/A'}</span>
               </div>
             ))}
           </div>
@@ -115,7 +194,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
           <div className="flex items-center mb-4">
             <Mountain className="w-6 h-6 text-blue-500 mr-2" />
-            <h3 className="text-lg font-semibold">Moraine Sensors</h3>
+            <h3 className="text-lg font-semibold">Shore Sensors</h3>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
@@ -123,21 +202,21 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 <Droplets className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Humidity</span>
               </div>
-              <span className="font-semibold">{sensorData.moraine.humidity.toFixed(1)}%</span>
+              <span className="font-semibold">{typeof latestSensor?.shoreHumidity === 'string' ? parseFloat(latestSensor.shoreHumidity).toFixed(1) : 'N/A'}%</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
               <div className="flex items-center">
                 <Thermometer className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Temperature</span>
               </div>
-              <span className="font-semibold">{sensorData.moraine.temperature.toFixed(1)}°C</span>
+              <span className="font-semibold">{typeof latestSensor?.shoreTemperature === 'string' ? parseFloat(latestSensor.shoreTemperature).toFixed(1) : 'N/A'}°C</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
               <div className="flex items-center">
                 <Activity className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Vibration</span>
               </div>
-              <span className="font-semibold">{sensorData.moraine.vibration.toFixed(3)}</span>
+              <span className="font-semibold">{typeof latestSensor?.shoreVibration === 'string' ? parseFloat(latestSensor.shoreVibration).toFixed(3) : 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -149,7 +228,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
           <h3 className="text-lg font-semibold mb-4">Temperature & Humidity Trends</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={timeSeriesData} className="chart-container">
+              <LineChart data={floatGraphData} className="chart-container">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="time" stroke="#666" />
                 <YAxis stroke="#666" />
@@ -164,7 +243,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 <Legend />
                 <Line 
                   type="monotone" 
-                  dataKey="temp" 
+                  dataKey="temperature" 
                   stroke="#8884d8" 
                   strokeWidth={2}
                   name="Temperature" 
@@ -173,7 +252,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="waterTemp" 
+                  dataKey="waterTemperature" 
                   stroke="#82ca9d" 
                   strokeWidth={2}
                   name="Water Temperature" 
@@ -198,7 +277,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
           <h3 className="text-lg font-semibold mb-4">Vibration Analysis</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={vibrationData} className="chart-container">
+              <AreaChart data={shoreGraphData} className="chart-container">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="time" stroke="#666" />
                 <YAxis stroke="#666" />
@@ -212,7 +291,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 />
                 <Area 
                   type="monotone" 
-                  dataKey="value" 
+                  dataKey="vibration" 
                   stroke="#8884d8" 
                   fill="#8884d8" 
                   fillOpacity={0.3}
