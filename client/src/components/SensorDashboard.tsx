@@ -13,6 +13,8 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [timeRange, setTimeRange] = useState('all');
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
+  const [gyroGraphData, setGyroGraphData] = useState<any[]>([]);
+  const [showGyroGraph, setShowGyroGraph] = useState(false);
   const [locationName, setLocationName] = useState<string>("");
 
   useEffect(() => {
@@ -81,8 +83,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         filteredData = data.filter(([timestamp]) => now - Number(timestamp) <= 3600);
         break;
       case "day":
-        filteredData = data.filter(([timestamp]) => now - Number(timestamp) <= 86400);
-        break;
       case "week":
         filteredData = data.filter(([timestamp]) => now - Number(timestamp) <= 604800);
         break;
