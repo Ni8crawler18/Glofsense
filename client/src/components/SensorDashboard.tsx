@@ -106,6 +106,15 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
       humidity: parseFloat(values.shoreHumidity || 0),
       vibration: parseFloat(values.shoreVibration || 0)
     }));
+    const formattedGyroData = filteredData.map(([timestamp, values]) => ({
+      time: new Date(Number(timestamp) * 1000).toLocaleString(),
+      magnitude: Math.sqrt(
+        Math.pow(parseFloat(values['floatX-Axis'] || 0), 2) +
+        Math.pow(parseFloat(values['floatY-Axis'] || 0), 2) +
+        Math.pow(parseFloat(values['floatZ-Axis'] || 0), 2)
+      )
+    }));
+    setGyroGraphData(formattedGyroData);
 
     setFloatGraphData(formattedFloatData);
     setShoreGraphData(formattedShoreData);
@@ -326,8 +335,47 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
           </div>
         </div>
       </div>
+      {/* Gyroscope Data Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+          <h3 className="text-lg font-semibold mb-4">Gyroscope Data Trends</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={gyroGraphData} className="chart-container">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="time" stroke="#666" />
+                <YAxis stroke="#666" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }} 
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="magnitude" 
+                  stroke="#D8544F" 
+                  strokeWidth={2}
+                  name="Magnitude" 
+                  dot={{ stroke: '#D8544F', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#D8544F', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-      
+        {/* Water Level Animation */}
+        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+          <h3 className="text-lg font-semibold mb-4">Water Level Animation</h3>
+          <div className="relative h-80">
+            <div className="w-full h-full bg-blue-500"></div>
+          </div>
+        </div>
+      </div>  
     </div>
   );
 };
