@@ -132,6 +132,29 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
           <option value="all">All Time</option>
         </select>
       </div>
+      {/* Risk Level Indicator */}
+      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+        <h3 className="text-lg font-semibold mb-4">Risk Assessment</h3>
+        <div className="flex items-center space-x-6">
+          <div className="relative w-40 h-40">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`w-32 h-32 rounded-full ${riskColor} opacity-20 risk-pulse`}></div>
+              <div className={`w-24 h-24 rounded-full ${riskColor} opacity-40`}></div>
+              <div className={`w-16 h-16 rounded-full ${riskColor}`}></div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-2xl font-semibold capitalize">{riskLevel} Risk</h4>
+            <p className="text-gray-600 mt-1">Based on current sensor readings</p>
+            <div className="mt-3 text-sm">
+              <div className="flex items-center text-gray-600">
+                <Activity className="w-4 h-4 mr-2" />
+                <span>Updated every 2 Seconds</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Floating Sensors */}
         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -304,29 +327,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         </div>
       </div>
 
-      {/* Risk Level Indicator */}
-      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-        <h3 className="text-lg font-semibold mb-4">Risk Assessment</h3>
-        <div className="flex items-center space-x-6">
-          <div className="relative w-40 h-40">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`w-32 h-32 rounded-full ${riskColor} opacity-20 risk-pulse`}></div>
-              <div className={`w-24 h-24 rounded-full ${riskColor} opacity-40`}></div>
-              <div className={`w-16 h-16 rounded-full ${riskColor}`}></div>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-2xl font-semibold capitalize">{riskLevel} Risk</h4>
-            <p className="text-gray-600 mt-1">Based on current sensor readings</p>
-            <div className="mt-3 text-sm">
-              <div className="flex items-center text-gray-600">
-                <Activity className="w-4 h-4 mr-2" />
-                <span>Updated every 5 minutes</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };
