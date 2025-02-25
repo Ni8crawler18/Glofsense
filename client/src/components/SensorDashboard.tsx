@@ -251,7 +251,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                   <Activity className="w-5 h-5 text-gray-600 mr-2" />
                   <span className="text-gray-600">{axis}-axis</span>
                 </div>
-                <span className="font-semibold">{typeof latestSensor?.[`float${axis}-Axis`] === 'string' ? parseFloat(latestSensor[`float${axis}-Axis`]).toFixed(3) : 'N/A'}</span>
+                <span className="font-semibold">{typeof latestSensor?.[`float${axis}-Axis`] === 'string' ? parseFloat(latestSensor[`float${axis}-Axis`]).toFixed(3) : 'N/A'} °/s</span>
               </div>
             ))}
           </div>
@@ -283,7 +283,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 <Activity className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Vibration</span>
               </div>
-              <span className="font-semibold">{typeof latestSensor?.shoreVibration === 'string' ? parseFloat(latestSensor.shoreVibration).toFixed(3) : 'N/A'}</span>
+              <span className="font-semibold">{typeof latestSensor?.shoreVibration === 'string' ? parseFloat(latestSensor.shoreVibration).toFixed(1) : 'N/A'} ADC</span>
             </div>
           </div>
         </div>
