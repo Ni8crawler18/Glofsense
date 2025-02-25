@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { Camera, Upload, Settings, Play, Square, AlertTriangle } from 'lucide-react';
 
 // Types for TypeScript
 interface ColorRange {
@@ -24,24 +25,6 @@ const GLACIAL_LAKE_COLOR_RANGES: ColorRange[] = [
   { lower: [90, 20, 150], upper: [120, 100, 255] }  // Milky Blue/Grayish Blue
 ];
 
-/**
- * Function to check if a pixel color is within any of the defined ranges
- */
-function isWaterPixel(r: number, g: number, b: number): boolean {
-  // Convert RGB to HSV
-  const [h, s, v] = rgbToHsv(r, g, b);
-  
-  // Check if the HSV values fall within any of our defined ranges
-  return GLACIAL_LAKE_COLOR_RANGES.some(range => {
-    return h >= range.lower[0] && h <= range.upper[0] &&
-           s >= range.lower[1] && s <= range.upper[1] &&
-           v >= range.lower[2] && v <= range.upper[2];
-  });
-}
-
-/**
- * Convert RGB to HSV color space
- */
 function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
   g /= 255;
@@ -55,7 +38,7 @@ function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   s = max === 0 ? 0 : d / max;
   
   if (max === min) {
-    h = 0; // achromatic
+    h = 0;
   } else {
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -68,36 +51,34 @@ function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   return [h * 180, s * 255, v * 255];
 }
 
-/**
- * Process a frame to detect water and calculate volume
- */
+function isWaterPixel(r: number, g: number, b: number): boolean {
+  const [h, s, v] = rgbToHsv(r, g, b);
+  return GLACIAL_LAKE_COLOR_RANGES.some(range => {
+    return h >= range.lower[0] && h <= range.upper[0] &&
+           s >= range.lower[1] && s <= range.upper[1] &&
+           v >= range.lower[2] && v <= range.upper[2];
+  });
+}
+
 function processImageData(imageData: ImageData): {
-  processedImageData: ImageData,
-  waterVolumes: WaterVolume[],
-  totalVolume: number
+  processedImageData: ImageData;
+  waterVolumes: WaterVolume[];
+  totalVolume: number;
 } {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
-  
-  // Create a binary mask for water pixels
   const waterMask = new Uint8Array(width * height);
   
-  // Mark water pixels in the mask
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const idx = (y * width + x) * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      
-      if (isWaterPixel(r, g, b)) {
+      if (isWaterPixel(data[idx], data[idx + 1], data[idx + 2])) {
         waterMask[y * width + x] = 1;
       }
     }
   }
   
-  // Find connected components (a simplified approach compared to OpenCV's findContours)
   const visited = new Set<number>();
   const waterVolumes: WaterVolume[] = [];
   
@@ -122,68 +103,40 @@ function processImageData(imageData: ImageData): {
           contour.push([cx, cy]);
           area++;
           
-          // Add neighbors to stack
           stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
         }
         
-        if (area > 100) { // Filter small regions
+        if (area > 100) {
           const realWorldArea = area * (PIXEL_TO_METER_CONVERSION ** 2);
           const volume = realWorldArea * ESTIMATED_DEPTH;
-          
-          waterVolumes.push({
-            area: realWorldArea,
-            volume,
-            contour
-          });
+          waterVolumes.push({ area: realWorldArea, volume, contour });
         }
       }
     }
   }
   
-  // Create a copy of the original image for annotation
   const processedImageData = new ImageData(
     new Uint8ClampedArray(imageData.data),
     width,
     height
   );
   
-  // Annotate the image
-  waterVolumes.forEach(({ contour, volume }) => {
-    // Find bounding rectangle
-    let minX = width, minY = height, maxX = 0, maxY = 0;
-    
+  waterVolumes.forEach(({ contour }) => {
     contour.forEach(([x, y]) => {
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-      
-      // Draw contour in green
       const idx = (y * width + x) * 4;
-      processedImageData.data[idx] = 0;       // R
-      processedImageData.data[idx + 1] = 255; // G
-      processedImageData.data[idx + 2] = 0;   // B
-      processedImageData.data[idx + 3] = 255; // A
+      processedImageData.data[idx] = 0;
+      processedImageData.data[idx + 1] = 255;
+      processedImageData.data[idx + 2] = 0;
+      processedImageData.data[idx + 3] = 255;
     });
-    
-    // We would add text here in a real implementation
-    // But drawing text on ImageData is complex and unnecessary for this example
   });
   
-  // Calculate total volume
   const totalVolume = waterVolumes.reduce((sum, { volume }) => sum + volume, 0);
   
-  return {
-    processedImageData,
-    waterVolumes,
-    totalVolume
-  };
+  return { processedImageData, waterVolumes, totalVolume };
 }
 
-/**
- * React component for Glacial Lake Detection
- */
-const GlacialLakeDetection: React.FC = () => {
+const CameraInterface: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sourceType, setSourceType] = useState<'webcam' | 'ipCamera' | 'file'>('webcam');
@@ -192,13 +145,15 @@ const GlacialLakeDetection: React.FC = () => {
   const [totalVolume, setTotalVolume] = useState<number>(0);
   const [calibrationFactor, setCalibrationFactor] = useState<number>(PIXEL_TO_METER_CONVERSION);
   const [estimatedDepth, setEstimatedDepth] = useState<number>(ESTIMATED_DEPTH);
-  
+  const [error, setError] = useState<string>('');
+
   useEffect(() => {
     let animationFrameId: number;
     let videoStream: MediaStream | null = null;
-    
+
     const startDetection = async () => {
       if (!videoRef.current || !canvasRef.current) return;
+      setError('');
       
       try {
         if (sourceType === 'webcam') {
@@ -209,26 +164,22 @@ const GlacialLakeDetection: React.FC = () => {
         }
         
         await videoRef.current.play();
-        
-        // Resize canvas to match video dimensions
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
-        
-        // Start the processing loop
         processFrame();
       } catch (error) {
         console.error('Error accessing video stream:', error);
+        setError('Failed to access video stream. Please check your camera permissions.');
         setIsDetecting(false);
       }
     };
-    
+
     const processFrame = () => {
       if (!videoRef.current || !canvasRef.current || !isDetecting) return;
       
       const ctx = canvasRef.current.getContext('2d');
       if (!ctx) return;
       
-      // Draw the current video frame on the canvas
       ctx.drawImage(
         videoRef.current,
         0, 0,
@@ -236,39 +187,31 @@ const GlacialLakeDetection: React.FC = () => {
         canvasRef.current.height
       );
       
-      // Get the image data from the canvas
       const imageData = ctx.getImageData(
         0, 0,
         canvasRef.current.width,
         canvasRef.current.height
       );
       
-      // Process the image data
-      const { processedImageData, totalVolume } = processImageData(imageData);
+      const processedData = processImageData(imageData);
+      ctx.putImageData(processedData.processedImageData, 0, 0);
+      setTotalVolume(processedData.totalVolume);
       
-      // Update the canvas with the processed image
-      ctx.putImageData(processedImageData, 0, 0);
-      
-      // Update total volume state
-      setTotalVolume(totalVolume);
-      
-      // Request the next animation frame
       animationFrameId = requestAnimationFrame(processFrame);
     };
-    
+
     if (isDetecting) {
       startDetection();
     }
-    
+
     return () => {
-      // Clean up
       cancelAnimationFrame(animationFrameId);
       if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
       }
     };
   }, [isDetecting, sourceType, ipCameraUrl]);
-  
+
   const handleStartStop = () => {
     setIsDetecting(!isDetecting);
   };
@@ -281,108 +224,173 @@ const GlacialLakeDetection: React.FC = () => {
         videoRef.current.src = url;
         videoRef.current.onloadeddata = () => {
           videoRef.current?.play();
-          setIsDetecting(true); // Start detection when video is loaded
+          setIsDetecting(true);
         };
       }
     }
   };
-  
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-  <h1 className="text-2xl font-bold mb-4">Glacial Lake Water Flow Detection</h1>
-  <div className="mb-4">
-    <div className="flex gap-4 mb-2">
-      <div>
-        <label className="block mb-1">Video Source</label>
-        <select
-          className="p-2 border rounded"
-          value={sourceType}
-          onChange={(e) => setSourceType(e.target.value as 'webcam' | 'ipCamera' | 'file')}
-        >
-          <option value="webcam">Webcam</option>
-          <option value="ipCamera">IP Camera</option>
-          <option value="file">Video File</option>
-        </select>
-      </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+                <Camera className="w-6 h-6 mr-2 text-blue-500" />
+                Glacial Lake Water Flow Detection
+              </h1>
+              <p className="text-gray-600 mt-1">Real-time monitoring and analysis of glacial lake conditions</p>
+            </div>
+            <button
+              onClick={handleStartStop}
+              className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                isDetecting
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {isDetecting ? (
+                <>
+                  <Square className="w-4 h-4 mr-2" />
+                  Stop Detection
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Detection
+                </>
+              )}
+            </button>
+          </div>
 
-      {sourceType === 'ipCamera' && (
-        <div className="flex-1">
-          <label className="block mb-1">IP Camera URL</label>
-          <input
-            type="text"
-            className="p-2 border rounded w-full"
-            value={ipCameraUrl}
-            onChange={(e) => setIpCameraUrl(e.target.value)}
-            placeholder="http://<IP>:<PORT>/video"
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="col-span-2">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <Settings className="w-5 h-5 mr-2 text-gray-600" />
+                  Configuration
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Video Source
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={sourceType}
+                      onChange={(e) => setSourceType(e.target.value as 'webcam' | 'ipCamera' | 'file')}
+                    >
+                      <option value="webcam">Webcam</option>
+                      <option value="ipCamera">IP Camera</option>
+                      <option value="file">Video File</option>
+                    </select>
+                  </div>
+
+                  {sourceType === 'ipCamera' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        IP Camera URL
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={ipCameraUrl}
+                        onChange={(e) => setIpCameraUrl(e.target.value)}
+                        placeholder="http://<IP>:<PORT>/video"
+                      />
+                    </div>
+                  )}
+
+                  {sourceType === 'file' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Video File
+                      </label>
+                      <div className="flex items-center justify-center w-full">
+                        <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-8 h-8 text-blue-500" />
+                          <span className="mt-2 text-base leading-normal">Select a file</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="video/*"
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4">Calibration</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Pixel to Meter Ratio
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={calibrationFactor}
+                      onChange={(e) => setCalibrationFactor(parseFloat(e.target.value))}
+                      step="0.001"
+                      min="0.001"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estimated Depth (m)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={estimatedDepth}
+                      onChange={(e) => setEstimatedDepth(parseFloat(e.target.value))}
+                      step="0.1"
+                      min="0.1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+              <div className="flex items-center">
+                <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
+                <span className="text-red-700">{error}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-gray-50 rounded-lg overflow-hidden">
+            <div className="relative">
+              <video
+                ref={videoRef}
+                className="hidden"
+                muted
+                playsInline
+              />
+              <canvas
+                ref={canvasRef}
+                className="w-full h-auto"
+              />
+              <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg">
+                <div className="text-sm font-medium">Water Volume</div>
+                <div className="text-xl font-bold">{totalVolume.toFixed(2)} m³</div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      {sourceType === 'file' && (
-        <div className="flex-1">
-          <label className="block mb-1">Choose Video File</label>
-          <input
-            type="file"
-            className="p-2 border rounded w-full"
-            accept="video/*"
-            onChange={handleFileChange}
-          />
-        </div>
-      )}
-    </div>
-
-    <div className="flex gap-4 mb-2">
-      <div>
-        <label className="block mb-1">Pixel to Meter Conversion</label>
-        <input
-          type="number"
-          className="p-2 border rounded"
-          value={calibrationFactor}
-          onChange={(e) => setCalibrationFactor(parseFloat(e.target.value))}
-          step="0.001"
-          min="0.001"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1">Estimated Depth (m)</label>
-        <input
-          type="number"
-          className="p-2 border rounded"
-          value={estimatedDepth}
-          onChange={(e) => setEstimatedDepth(parseFloat(e.target.value))}
-          step="0.1"
-          min="0.1"
-        />
       </div>
     </div>
-
-    <button
-      className={`p-2 rounded ${isDetecting ? 'bg-red-500' : 'bg-blue-500'} text-white`}
-      onClick={handleStartStop}
-    >
-      {isDetecting ? 'Stop Detection' : 'Start Detection'}
-    </button>
-  </div>
-
-  <div className="relative bg-white min-h-[400px] pb-8"> {/* Add min-height and padding-bottom */}
-    <video
-      ref={videoRef}
-      className="hidden"
-      muted
-      playsInline
-    />
-    <canvas
-      ref={canvasRef}
-      className="w-full border"
-    />
-    <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white p-2 rounded">
-      Total Water Flow Volume: {totalVolume.toFixed(2)} m³
-    </div>
-  </div>
-</div>
-
   );
 };
 
-export default GlacialLakeDetection;
+export default CameraInterface;

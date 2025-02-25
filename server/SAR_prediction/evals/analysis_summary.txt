@@ -5,7 +5,7 @@ GLOF Risk Assessment - Analysis Summary
 ---------------------------
 Mean Squared Error: 0.013063
 Root Mean Squared Error: 0.114292
-R² Score: 0.749375
+Rï¿½ Score: 0.749375
 Mean Absolute Percentage Error: 21.37%
 
 2. Classification Performance
@@ -46,6 +46,3 @@ Date: 2025-04-06
 Maximum Risk Level: 0.6150
 Date of Maximum Risk: 2025-03-17
 Risk Threshold Used: 0.1
-
-5. Model Architecture
--------------------
