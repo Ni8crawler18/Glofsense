@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Thermometer, Droplets, Mountain, Compass, Activity, Waves } from 'lucide-react';
 import { ref, onValue } from "firebase/database";
 import { database } from '../firebase';
+import axios from "axios";
 
 interface SensorDashboardProps {
   selectedLake: string;
@@ -10,11 +11,12 @@ interface SensorDashboardProps {
 
 const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [latestSensor, setLatestSensor] = useState<any>(null);
-  const [timeRange, setTimeRange] = useState('all');
+  const [timeRange, setTimeRange] = useState("all");
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
+  const [riskColor, setRiskColor] = useState<string>("bg-yellow-500");
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
   const [gyroGraphData, setGyroGraphData] = useState<any[]>([]);
-  const [showGyroGraph, setShowGyroGraph] = useState(false);
   const [locationName, setLocationName] = useState<string>("");
 
   useEffect(() => {
@@ -25,7 +27,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
       dataRef,
       (snapshot) => {
         const data = snapshot.val();
-        console.log("Fetched data:", data); // Log fetched data
 
         if (!data) {
           console.error("No data found");
@@ -41,13 +42,15 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         sensorEntries.sort(([a], [b]) => Number(a) - Number(b));
 
         const [latestTimestamp, latestValues] = sensorEntries[sensorEntries.length - 1];
-        const { floatLatitude, floatLongitude, ...filteredValues } = latestValues;
+        const { floatLatitude, floatLongitude, ...filteredValues } = latestValues as {
+          floatLatitude: string;
+          floatLongitude: string;
+          [key: string]: any;
+        };
         setLatestSensor({ timestamp: latestTimestamp, ...filteredValues });
-
-        console.log("Latest sensor values:", filteredValues); // Log latest sensor values
-
-        fetchLocationName(parseFloat(latestValues.floatLatitude), parseFloat(latestValues.floatLongitude));
+        fetchLocationName(parseFloat(floatLatitude), parseFloat(floatLongitude));
         updateGraphData(sensorEntries, timeRange);
+        getPrediction(filteredValues);
       },
       (error) => {
         console.error("Error fetching data:", error);
@@ -71,6 +74,44 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
     } catch (error) {
       console.error("Error fetching location name:", error);
       setLocationName("Error fetching location");
+    }
+  };
+
+  const getPrediction = async (sensorData: any) => {
+    try {
+      const features = [
+        sensorData.floatTemperature,
+        sensorData.floatHumidity,
+        sensorData.floatWaterTemperature,
+        sensorData.floatAltitude,
+        sensorData["floatX-Axis"],
+        sensorData["floatY-Axis"],
+        sensorData["floatZ-Axis"],
+        sensorData.shoreTemperature,
+        sensorData.shoreVibration,
+        sensorData.floatVelocity,
+      ].map(value => isNaN(parseFloat(value)) ? 0 : parseFloat(value));
+
+      console.log("Features for prediction:", features); // Log features
+
+      const response = await axios.post("https://glof-backend.onrender.com/predict", { features });
+
+      const probabilities = response.data.probabilities; // Directly access array
+      
+      if (!Array.isArray(probabilities) || probabilities.length !== 3) {
+        console.error("Invalid probabilities format:", response.data);
+        return;
+      }
+      
+      const riskLabels: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
+      const maxIndex = probabilities.indexOf(Math.max(...probabilities));
+      
+      setRiskLevel(riskLabels[maxIndex]);
+      
+      const riskColors: { [key in "low" | "medium" | "high"]: string } = { low: "bg-green-500", medium: "bg-yellow-500", high: "bg-red-500" };
+      setRiskColor(riskColors[riskLabels[maxIndex]]);
+    } catch (error) {
+      console.error("Error fetching prediction:", error);
     }
   };
 
@@ -120,12 +161,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
     setShoreGraphData(formattedShoreData);
   };
 
-  const riskLevel = "medium";
-  const riskColor = {
-    low: "bg-green-500",
-    medium: "bg-yellow-500",
-    high: "bg-red-500"
-  }[riskLevel];
 
   return (
     <div className="space-y-6">

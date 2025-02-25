@@ -9,3 +9,5 @@ declare module './firebase' {
 
   export { app, database, analytics };
 }
+
+export {};
