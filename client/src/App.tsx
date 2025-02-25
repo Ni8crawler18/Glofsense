@@ -48,7 +48,14 @@ function App() {
         {activePage === 'dem' && (
           <div className="p-4">
             <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
-            <p>Streamlit integration coming soon...</p>
+            <div className="w-full h-[600px] border rounded-lg shadow-lg">
+              <iframe
+                src="https://dem-flow.streamlit.app/"
+                width="100%"
+                height="100%"
+                style={{ border: "none", borderRadius: "8px" }}
+              />
+            </div>
           </div>
         )}
         {activePage === 'camera' && (
