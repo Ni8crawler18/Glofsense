@@ -1,0 +1,11 @@
+=== Regression Metrics ===
+Mean Squared Error: 0.013063
+Root Mean Squared Error: 0.114292
+R² Score: 0.749375
+Mean Absolute Percentage Error: 21.37%
+
+=== Classification Metrics ===
+Accuracy: 0.8421052631578947
+Precision: 1.0000
+Recall: 0.8333
+F1 Score: 0.9091
