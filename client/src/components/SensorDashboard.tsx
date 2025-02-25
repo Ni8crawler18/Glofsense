@@ -12,8 +12,8 @@ interface SensorDashboardProps {
 const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [latestSensor, setLatestSensor] = useState<any>(null);
   const [timeRange, setTimeRange] = useState("all");
-  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
-  const [riskColor, setRiskColor] = useState<string>("bg-yellow-500");
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("low");
+  const [riskColor, setRiskColor] = useState<string>("bg-green-500");
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
   const [gyroGraphData, setGyroGraphData] = useState<any[]>([]);
