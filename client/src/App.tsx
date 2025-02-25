@@ -51,7 +51,7 @@ function App() {
           <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
           <div className="w-full h-[600px] border rounded-lg shadow-lg">
           <iframe
-            src="https://dem-co2s.onrender.com/"
+            src="https://dem-co2s.onrender.com/" /*http://192.168.1.14:8501*/
             width="100%"
             height="100%"
             style={{ border: "none", borderRadius: "8px" }}
