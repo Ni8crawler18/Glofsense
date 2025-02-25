@@ -12,12 +12,28 @@ interface SensorDashboardProps {
 const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [latestSensor, setLatestSensor] = useState<any>(null);
   const [timeRange, setTimeRange] = useState("all");
-  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("low");
-  const [riskColor, setRiskColor] = useState<string>("bg-green-500");
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
+  const [riskColor, setRiskColor] = useState<string>("bg-yellow-500");
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
   const [gyroGraphData, setGyroGraphData] = useState<any[]>([]);
   const [locationName, setLocationName] = useState<string>("");
+  const [waterLevel, setWaterLevel] = useState<number>(0);
+  const [waveAmplitude, setWaveAmplitude] = useState<number>(100);
+
+  // Update the calculateWaveHeight function to also set wave amplitude
+  const calculateWaveHeight = (altitude: number) => {
+    const maxAltitude = 2500;
+    // Calculate water level percentage (inversely proportional to altitude)
+    const invertedPercentage = ((maxAltitude - altitude) / maxAltitude) * 70;
+    const actualPercentage = 100 - invertedPercentage;
+    
+    // Calculate wave amplitude (higher altitude = smaller waves)
+    const amplitudePercentage = Math.max(10, 100 - (altitude / maxAltitude * 90));
+    setWaveAmplitude(amplitudePercentage);
+    
+    return actualPercentage;
+  };
 
   useEffect(() => {
     const userId = "ggVVdic7v3gqsBkbQIRYWvlxOFo2"; // Replace with actual user ID
@@ -59,6 +75,13 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
 
     return () => unsubscribe();
   }, [timeRange]);
+
+  useEffect(() => {
+    if (latestSensor?.floatAltitude) {
+      const altitude = parseFloat(latestSensor.floatAltitude);
+      setWaterLevel(calculateWaveHeight(altitude));
+    }
+  }, [latestSensor?.floatAltitude]);
 
   const fetchLocationName = async (latitude: number, longitude: number) => {
     try {
@@ -251,7 +274,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                   <Activity className="w-5 h-5 text-gray-600 mr-2" />
                   <span className="text-gray-600">{axis}-axis</span>
                 </div>
-                <span className="font-semibold">{typeof latestSensor?.[`float${axis}-Axis`] === 'string' ? parseFloat(latestSensor[`float${axis}-Axis`]).toFixed(3) : 'N/A'} °/s</span>
+                <span className="font-semibold">{typeof latestSensor?.[`float${axis}-Axis`] === 'string' ? parseFloat(latestSensor[`float${axis}-Axis`]).toFixed(3) : 'N/A'}</span>
               </div>
             ))}
           </div>
@@ -283,7 +306,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
                 <Activity className="w-5 h-5 text-gray-600 mr-2" />
                 <span className="text-gray-600">Vibration</span>
               </div>
-              <span className="font-semibold">{typeof latestSensor?.shoreVibration === 'string' ? parseFloat(latestSensor.shoreVibration).toFixed(1) : 'N/A'} ADC</span>
+              <span className="font-semibold">{typeof latestSensor?.shoreVibration === 'string' ? parseFloat(latestSensor.shoreVibration).toFixed(3) : 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -403,14 +426,94 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
           </div>
         </div>
 
-        {/* Water Level Animation */}
+        {/* Water Level Animation - Updated */}
         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-          <h3 className="text-lg font-semibold mb-4">Water Level Animation</h3>
-          <div className="relative h-80">
-            <div className="w-full h-full bg-blue-500"></div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Water Level Animation</h3>
+          </div>
+
+          <div className="relative h-80 flex">
+            {/* Scale */}
+            <div className="scale-container w-16 h-full flex flex-col justify-between text-sm text-gray-600 pr-2 border-r border-gray-200">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-end w-full">
+                  <span className="mr-1">{(5000 - index * 1000).toString()}</span>
+                  <div className="w-2 border-t border-gray-300"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Wave Animation */}
+            <div 
+              className="wave-container flex-1" 
+              style={{ 
+                '--wave-height': `${waterLevel}%`,
+                '--wave-amplitude': `${waveAmplitude}%` 
+              } as React.CSSProperties}
+            >
+              <div className="wave"></div>
+              <div className="wave"></div>
+              <div className="wave"></div>
+              <div className="absolute right-2 top-2 bg-white px-2 py-1 rounded-md shadow-sm text-sm">
+                {typeof latestSensor?.floatAltitude === 'string' ? `${parseFloat(latestSensor.floatAltitude).toFixed(0)}m` : 'N/A'}
+              </div>
+            </div>
           </div>
         </div>
-      </div>  
+
+        {/* Combined styles */}
+        <style>
+          {`
+          .wave-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: white;
+            border-radius: 0.5rem;
+          }
+          .scale-container {
+            font-family: monospace;
+            min-width: 4rem;
+          }
+          .wave {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: calc(var(--wave-height) * 3%);
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 30" preserveAspectRatio="none"><path d="M0,15 C150,30 350,0 600,15 C850,30 1050,0 1200,15 L1200,30 L0,30 Z" fill="%230288d1"/></svg>');
+            background-size: 50% 100%;
+            animation: wave-animation 5s infinite linear;
+            opacity: 0.7;
+            transition: height 0.5s ease;
+          }
+          .wave:nth-child(2) {
+            bottom: 3px;
+            height: calc(var(--wave-height) * 0.9);
+            animation-duration: 7s;
+            opacity: 0.5;
+          }
+          .wave:nth-child(3) {
+            bottom: 6px;
+            height: calc(var(--wave-height) * 0.7);
+            animation-duration: 10s;
+            opacity: 0.3;
+          }
+          @keyframes wave-animation {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+          }
+          .risk-pulse {
+            animation: risk-pulse-animation 2s infinite;
+          }
+          @keyframes risk-pulse-animation {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+            100% { transform: scale(1); opacity: 0.2; }
+          }
+          `}
+        </style>
+      </div>
     </div>
   );
 };

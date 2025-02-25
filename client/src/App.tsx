@@ -3,6 +3,7 @@ import { Menu, ChevronDown, GaugeCircle, Satellite, Mountain, Camera } from 'luc
 import SensorDashboard from './components/SensorDashboard';
 import Navbar from './components/Navbar';
 import CameraInterface from './components/CameraInterface';
+import SARPrediction from './components/SAR_prediction';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,24 +44,25 @@ function App() {
         {activePage === 'sar' && (
           <div className="p-4">
             <h2 className="text-2xl font-semibold mb-4">SAR based Prediction</h2>
-            <p>Streamlit integration coming soon...</p>
+            <SARPrediction />
           </div>
         )}
         {activePage === 'dem' && (
-        <div className="p-4">
-          <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
-          <div className="w-full h-[600px] border rounded-lg shadow-lg">
-          <iframe
-            src="https://dem-co2s.onrender.com/" /*http://192.168.1.14:8501*/
-            width="100%"
-            height="100%"
-            style={{ border: "none", borderRadius: "8px" }}
-            title="DEM Flow Simulation"
-            allowFullScreen
-          />
-          </div>
-        </div>
-      )}
+  <div className="p-4">
+    <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
+    <div className="w-full h-[100vh] border rounded-lg shadow-lg"> {/* Increased height */}
+      <iframe
+        src="https://dem-co2s.onrender.com/"
+        width="100%"
+        height="100%"
+        style={{ border: "none", borderRadius: "8px" }}
+        title="DEM Flow Simulation"
+        allowFullScreen
+      />
+    </div>
+  </div>
+)}
+
 
         {activePage === 'camera' && (
           <div className="p-4">
