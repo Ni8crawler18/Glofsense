@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Menu, ChevronDown, GaugeCircle, Satellite, Mountain, Camera } from 'lucide-react';
 import SensorDashboard from './components/SensorDashboard';
 import Navbar from './components/Navbar';
+import CameraInterface from './components/CameraInterface';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedLake, setSelectedLake] = useState('Shisper Lake');
+  const [selectedLake, setSelectedLake] = useState('South Lhonak Lake');
   const [activePage, setActivePage] = useState('dashboard');
 
   const lakes = [
-    'Shisper Lake',
-    'Khurdopin Lake',
-    'Passu Lake',
-    'Batura Lake'
+    'South Lhonak Lake',
+    'Chorabari Lake',
+    'Pulicat Lake',
+    'Sursagar Lake'
   ];
 
   const navigationItems = [
@@ -61,7 +62,9 @@ function App() {
         {activePage === 'camera' && (
           <div className="p-4">
             <h2 className="text-2xl font-semibold mb-4">Camera Interface</h2>
-            <p>Camera feed integration coming soon...</p>
+            <div className="w-full h-[600px] border rounded-lg shadow-lg">
+              <CameraInterface />
+            </div>
           </div>
         )}
       </main>
