@@ -94,7 +94,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
 
       console.log("Features for prediction:", features); // Log features
 
-      const response = await axios.post("http://127.0.0.1:8000/predict", { features });
+      const response = await axios.post("https://glof-backend.onrender.com/predict", { features });
 
       const probabilities = response.data.probabilities; // Directly access array
       
