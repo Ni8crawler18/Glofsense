@@ -1,36 +1,9 @@
-import React, { useState } from 'react';
-import { Activity, AlertCircle, Calendar, TrendingUp, Waves, Ruler, Maximize2, ArrowUpRight, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-interface ImageData {
-  date: string;
-  url: string;
-  area: number;
-  perimeter: number;
-  backscatter: number;
-  coherence: number;
-  waterContent: number;
-}
-
-interface TrendData {
-  date: string;
-  area: number;
-  perimeter: number;
-  backscatter: number;
-}
-
-const SARPrediction: React.FC = () => {
-  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('medium');
-  const [areaChange, setAreaChange] = useState(125.5); // m²
-  const [perimeterChange, setPerimeterChange] = useState(45.2); // m
-  const [glofChance, setGlofChance] = useState(65); // percentage
-  const [backscatterChange, setBackscatterChange] = useState(-2.3); // dB
-  const [coherenceScore, setCoherenceScore] = useState(0.78); // 0-1
-  const [surfaceDisplacement, setSurfaceDisplacement] = useState(0.15); // m/day
 
   // Enhanced historical image data with SAR-specific metrics
   const historicalImages: ImageData[] = [
     {
+<<<<<<< HEAD
       date: '2024-03-15',
       url: 'C:/Users/NITHISH/OneDrive/Desktop/CDAC/images/sentinel1_2025-02-13_IW_VV.png',
       area: 1250,
@@ -85,6 +58,8 @@ const SARPrediction: React.FC = () => {
               Synthetic Aperture Radar interferometry analysis with multi-temporal backscatter assessment
             </p>
           </div>
+=======
+>>>>>>> 5ac4d434d4e602646bec9e68f8c5ccb3343b25e1
 
           {/* Risk Assessment Section */}
           <div className="mb-8">
@@ -117,7 +92,7 @@ const SARPrediction: React.FC = () => {
                       <Maximize2 className="w-5 h-5 text-blue-500 mr-2" />
                       <span className="text-gray-600">Area Change</span>
                     </div>
-                    <span className="font-bold text-lg">{areaChange} m²</span>
+
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -150,9 +125,7 @@ const SARPrediction: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Activity className="w-5 h-5 text-blue-500 mr-2" />
-                      <span className="text-gray-600">Coherence</span>
-                    </div>
-                    <span className="font-bold text-lg">{coherenceScore}</span>
+
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -182,10 +155,7 @@ const SARPrediction: React.FC = () => {
                     <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+
                       }}
                     />
                     <Legend />
@@ -193,11 +163,7 @@ const SARPrediction: React.FC = () => {
                       yAxisId="left"
                       type="monotone"
                       dataKey="area"
-                      name="Area (m²)"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                      dot={{ stroke: '#8884d8', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#8884d8', strokeWidth: 2 }}
+
                     />
                     <Line
                       yAxisId="right"
@@ -206,8 +172,7 @@ const SARPrediction: React.FC = () => {
                       name="Backscatter (dB)"
                       stroke="#82ca9d"
                       strokeWidth={2}
-                      dot={{ stroke: '#82ca9d', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#82ca9d', strokeWidth: 2 }}
+
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -222,7 +187,7 @@ const SARPrediction: React.FC = () => {
               {historicalImages.slice(0, 2).map((image, index) => (
                 <div key={image.date} className="bg-gray-50 rounded-lg overflow-hidden">
                   <img
-                    src={image.url}
+
                     alt={`SAR image from ${image.date}`}
                     className="w-full h-48 object-cover"
                   />
@@ -245,7 +210,7 @@ const SARPrediction: React.FC = () => {
                       </div>
                       <div>
                         <span className="text-sm text-gray-600">Area</span>
-                        <p className="font-bold">{image.area} m²</p>
+
                       </div>
                       <div>
                         <span className="text-sm text-gray-600">Water Content</span>
@@ -265,7 +230,7 @@ const SARPrediction: React.FC = () => {
               {historicalImages.map((image) => (
                 <div key={image.date} className="bg-gray-50 rounded-lg overflow-hidden">
                   <img
-                    src={image.url}
+
                     alt={`SAR image from ${image.date}`}
                     className="w-full h-40 object-cover"
                   />
@@ -278,7 +243,7 @@ const SARPrediction: React.FC = () => {
                     </div>
                     <div className="space-y-1 text-sm text-gray-600">
                       <div>Backscatter: {image.backscatter} dB</div>
-                      <div>Area: {image.area} m²</div>
+
                       <div>Coherence: {image.coherence}</div>
                     </div>
                   </div>
@@ -289,7 +254,6 @@ const SARPrediction: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+
 
 export default SARPrediction;
