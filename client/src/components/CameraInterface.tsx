@@ -32,7 +32,8 @@ function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  let h = 0, s = 0, v = max;
+  const v = max;
+  let h = 0, s = 0; 
   
   const d = max - min;
   s = max === 0 ? 0 : d / max;

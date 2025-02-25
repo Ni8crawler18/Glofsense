@@ -1,0 +1,12 @@
+Classification Report (Significant Area Changes)
+================================================
+Accuracy:  0.8421
+Precision: 1.0000
+Recall:    0.8333
+F1 Score:  0.9091
+
+Confusion Matrix:
+               Predicted
+              No    Yes
+Actual No    1      0     
+      Yes    3      15    
