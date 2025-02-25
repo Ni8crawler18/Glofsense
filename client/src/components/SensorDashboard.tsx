@@ -9,10 +9,10 @@ interface SensorDashboardProps {
   selectedLake: string;
 }
 
-const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
+const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRiskLevel }) => {
   const [latestSensor, setLatestSensor] = useState<any>(null);
   const [timeRange, setTimeRange] = useState("all");
-  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
+  const [riskLevel, setLocalRiskLevel] = useState<"low" | "medium" | "high">("medium");
   const [riskColor, setRiskColor] = useState<string>("bg-yellow-500");
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
@@ -152,7 +152,9 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
       const riskLabels: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
       const maxIndex = probabilities.indexOf(Math.max(...probabilities));
       
-      setRiskLevel(riskLabels[maxIndex]);
+      const newRiskLevel = riskLabels[maxIndex];
+      setLocalRiskLevel(newRiskLevel);
+      setRiskLevel(newRiskLevel);
       
       const riskColors: { [key in "low" | "medium" | "high"]: string } = { low: "bg-green-500", medium: "bg-yellow-500", high: "bg-red-500" };
       setRiskColor(riskColors[riskLabels[maxIndex]]);
@@ -394,7 +396,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
               <AreaChart data={shoreGraphData} className="chart-container">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="time" stroke="#666" />
-                <YAxis stroke="#666" />
+                <YAxis stroke="#666" domain={[0, 1200]} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'white', 
