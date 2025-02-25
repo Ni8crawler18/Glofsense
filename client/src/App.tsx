@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Menu, ChevronDown, GaugeCircle, Satellite, Mountain, Camera } from 'lucide-react';
+import { useState } from 'react';
+import {GaugeCircle, Satellite, Mountain, Camera } from 'lucide-react';
 import SensorDashboard from './components/SensorDashboard';
 import Navbar from './components/Navbar';
 import CameraInterface from './components/CameraInterface';
@@ -48,28 +48,26 @@ function App() {
           </div>
         )}
         {activePage === 'dem' && (
-  <div className="p-4">
-    <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
-    <div className="w-full h-[100vh] border rounded-lg shadow-lg"> {/* Increased height */}
-      <iframe
-        src="https://dem-co2s.onrender.com/"
-        width="100%"
-        height="100%"
-        style={{ border: "none", borderRadius: "8px" }}
-        title="DEM Flow Simulation"
-        allowFullScreen
-      />
-    </div>
-  </div>
-)}
+        <div className="p-4">
+          <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
+          <div className="w-full h-[100vh] border rounded-lg shadow-lg"> {/* Increased height */}
+            <iframe
+              src="https://dem-co2s.onrender.com/"
+              width="100%"
+              height="100%"
+              style={{ border: "none", borderRadius: "8px" }}
+              title="DEM Flow Simulation"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
 
 
         {activePage === 'camera' && (
           <div className="p-4">
             <h2 className="text-2xl font-semibold mb-4">Camera Interface</h2>
-            <div className="w-full h-[600px] border rounded-lg shadow-lg">
               <CameraInterface />
-            </div>
           </div>
         )}
       </main>

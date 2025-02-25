@@ -20,6 +20,31 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [locationName, setLocationName] = useState<string>("");
   const [waterLevel, setWaterLevel] = useState<number>(0);
   const [waveAmplitude, setWaveAmplitude] = useState<number>(100);
+    let socket = new WebSocket("ws://192.168.196.71:81");
+
+    socket.onopen = function () {
+      console.log("Connected to ESP32 WebSocket");
+    };
+
+    socket.onerror = function (error) {
+      console.error("WebSocket Error:", error);
+    };
+
+    socket.onclose = function () {
+      console.log("WebSocket Disconnected. Attempting to reconnect...");
+      setTimeout(() => {
+        socket = new WebSocket("ws://192.168.196.71:81");
+      }, 3000);
+    };
+
+    function sendRiskLevel(level: "low" | "medium" | "high") {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(`RISK_LEVEL:${level}`);
+        console.log(`Sent risk level to ESP32: RISK_LEVEL:${level}`);
+      } else {
+        console.error("WebSocket not connected");
+      }
+    }
 
   // Update the calculateWaveHeight function to also set wave amplitude
   const calculateWaveHeight = (altitude: number) => {
@@ -115,8 +140,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         sensorData.floatVelocity,
       ].map(value => isNaN(parseFloat(value)) ? 0 : parseFloat(value));
 
-      console.log("Features for prediction:", features); // Log features
-
       const response = await axios.post("https://glof-backend.onrender.com/predict", { features });
 
       const probabilities = response.data.probabilities; // Directly access array
@@ -133,6 +156,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
       
       const riskColors: { [key in "low" | "medium" | "high"]: string } = { low: "bg-green-500", medium: "bg-yellow-500", high: "bg-red-500" };
       setRiskColor(riskColors[riskLabels[maxIndex]]);
+      sendRiskLevel(riskLabels[maxIndex]);
     } catch (error) {
       console.error("Error fetching prediction:", error);
     }

@@ -32,7 +32,7 @@ const SARPrediction: React.FC = () => {
   const historicalImages: ImageData[] = [
     {
       date: '2024-03-15',
-      url: 'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8',
+      url: 'C:/Users/NITHISH/OneDrive/Desktop/CDAC/images/sentinel1_2025-02-13_IW_VV.png',
       area: 1250,
       perimeter: 450,
       backscatter: -15.2,
@@ -41,7 +41,7 @@ const SARPrediction: React.FC = () => {
     },
     {
       date: '2024-03-01',
-      url: 'https://images.unsplash.com/photo-1494475673543-6a6a27143fc8',
+      url: 'C:/Users/NITHISH/OneDrive/Desktop/CDAC/images/sentinel1_2025-02-22_IW_VV.png',
       area: 1125,
       perimeter: 405,
       backscatter: -12.9,
@@ -50,7 +50,7 @@ const SARPrediction: React.FC = () => {
     },
     {
       date: '2024-02-15',
-      url: 'https://images.unsplash.com/photo-1494498902093-87f291949d17',
+      url: 'C:/Users/NITHISH/OneDrive/Desktop/CDAC/images/sentinel1_2025-02-25_IW_VV.png',
       area: 1000,
       perimeter: 380,
       backscatter: -11.6,
