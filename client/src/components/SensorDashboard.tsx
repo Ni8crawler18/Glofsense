@@ -22,7 +22,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
   const [waterLevel, setWaterLevel] = useState<number>(0);
   const [waveAmplitude, setWaveAmplitude] = useState<number>(100);
   const [weatherData, setWeatherData] = useState<any>(null);
-    let socket = new WebSocket("ws://192.168.196.71:81");
+    let socket = new WebSocket("ws://192.168.196.64:81");
 
     socket.onopen = function () {
       console.log("Connected to ESP32 WebSocket");
@@ -35,13 +35,13 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
     socket.onclose = function () {
       console.log("WebSocket Disconnected. Attempting to reconnect...");
       setTimeout(() => {
-        socket = new WebSocket("ws://192.168.196.71:81");
+        socket = new WebSocket("ws://192.168.196.64:81");
       }, 3000);
     };
 
     function sendRiskLevel(level: "low" | "medium" | "high") {
       if (socket.readyState === WebSocket.OPEN) {
-        socket.send(`RISK_LEVEL:${level}`);
+        socket.send(`${level}`);
         console.log(`Sent risk level to ESP32: RISK_LEVEL:${level}`);
       } else {
         console.error("WebSocket not connected");
