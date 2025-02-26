@@ -7,6 +7,7 @@ import axios from "axios";
 
 interface SensorDashboardProps {
   selectedLake: string;
+  setRiskLevel: React.Dispatch<React.SetStateAction<"low" | "medium" | "high">>;
 }
 
 const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRiskLevel }) => {

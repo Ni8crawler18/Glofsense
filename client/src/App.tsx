@@ -54,10 +54,10 @@ function App() {
         )}
         {activePage === 'dem' && (
           <div className="p-4">
-            <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
+            <a href='http://localhost:8501' className="text-2xl font-semibold mb-4">DEM Analysis</a>
             <div className="w-full h-[100vh] border rounded-lg shadow-lg">
               <iframe
-                src="https://dem-co2s.onrender.com/"
+                src="https://dem-co2s.onrender.com/" // http://localhost:8501
                 width="100%"
                 height="100%"
                 style={{ border: "none", borderRadius: "8px" }}
