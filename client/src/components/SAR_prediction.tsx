@@ -43,7 +43,9 @@ const SARPrediction: React.FC = () => {
   const historicalImages: ImageData[] = [
     {
       date: "2025-02-25",
-      path: "/sentinel1_2025-02-25_IW_VV.png",
+
+      path: "/SAR_prediction/glof_data/sentinel1_2025-02-25_IW_VV.png",
+
       area: 1.26,
       perimeter: 4500,
       backscatter: -15.2,
@@ -52,7 +54,9 @@ const SARPrediction: React.FC = () => {
     },
     {
       date: "2025-02-22",
-      path: "/sentinel1_2025-02-22_IW_VV.png",
+
+      path: "/SAR_prediction/glof_data/sentinel1_2025-02-22_IW_VV.png",
+
       area: 1.245,
       perimeter: 4455,
       backscatter: -12.9,
@@ -61,7 +65,9 @@ const SARPrediction: React.FC = () => {
     },
     {
       date: "2025-02-13",
-      path: "/sentinel1_2025-02-13_IW_VV.png",
+
+      path: "/SAR_prediction/glof_data/sentinel1_2025-02-13_IW_VV.png",
+
       area: 1.235,
       perimeter: 4410,
       backscatter: -11.6,
