@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Thermometer, Droplets, Mountain, Compass, Activity, Waves } from 'lucide-react';
+import { Thermometer, Droplets, Mountain, Compass, Activity, Waves, Sun, CloudRain, Wind } from 'lucide-react';
 import { ref, onValue } from "firebase/database";
 import { database } from '../firebase';
 import axios from "axios";
@@ -21,6 +21,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
   const [locationName, setLocationName] = useState<string>("");
   const [waterLevel, setWaterLevel] = useState<number>(0);
   const [waveAmplitude, setWaveAmplitude] = useState<number>(100);
+  const [weatherData, setWeatherData] = useState<any>(null);
     let socket = new WebSocket("ws://192.168.196.71:81");
 
     socket.onopen = function () {
@@ -126,6 +127,25 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
     }
   };
 
+  useEffect(() => {
+    // Fetch weather data
+    const fetchWeatherData = async () => {
+      try {
+        const API_KEY = "1d351480961961f5fdb5c9a93c6444c4";
+        const lat = 27.9456; // Replace with actual latitude
+        const lon = 88.3324 ;
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+        );
+        setWeatherData(response.data);
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+      }
+    };
+
+    fetchWeatherData();
+  }, [selectedLake]);
+
   const getPrediction = async (sensorData: any) => {
     try {
       const features = [
@@ -226,9 +246,8 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
           <option value="all">All Time</option>
         </select>
       </div>
-      {/* Risk Level Indicator */}
-      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
-        <h3 className="text-lg font-semibold mb-4">Risk Assessment</h3>
+      <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex justify-between">
+        {/* Risk Level Indicator */}
         <div className="flex items-center space-x-6">
           <div className="relative w-40 h-40">
             <div className="absolute inset-0 flex items-center justify-center">
@@ -248,6 +267,26 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRisk
             </div>
           </div>
         </div>
+
+        {/* Weather Information */}
+        {weatherData && (
+        <div className="flex flex-col items-center space-y-2 mr-10">
+          <h4 className="text-lg font-semibold">Weather Data</h4>
+          <div className="flex items-center space-x-2">
+            <Sun className="w-5 h-5 text-yellow-500" />
+            <span className="text-gray-700">{weatherData.main.temp}°C</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Wind className="w-5 h-5 text-blue-500" />
+            <span className="text-gray-700">{weatherData.wind.speed} m/s</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CloudRain className="w-5 h-5 text-gray-500" />
+            <span className="text-gray-700">{weatherData.weather[0].description}</span>
+          </div>
+        </div>
+      )}
+
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Floating Sensors */}
