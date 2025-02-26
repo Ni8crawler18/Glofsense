@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Menu, ChevronDown, GaugeCircle, Satellite, Mountain, Camera } from 'lucide-react';
+import { useState } from 'react';
+import { GaugeCircle, Satellite, Mountain, Camera } from 'lucide-react';
 import SensorDashboard from './components/SensorDashboard';
 import Navbar from './components/Navbar';
 import CameraInterface from './components/CameraInterface';
@@ -9,6 +9,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedLake, setSelectedLake] = useState('South Lhonak Lake');
   const [activePage, setActivePage] = useState('dashboard');
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
 
   const lakes = [
     'South Lhonak Lake',
@@ -35,11 +36,15 @@ function App() {
         navigationItems={navigationItems}
         activePage={activePage}
         setActivePage={setActivePage}
+        riskLevel={riskLevel} // Pass risk level to Navbar
       />
 
       <main className="p-4 sm:ml-64 pt-20">
         {activePage === 'dashboard' && (
-          <SensorDashboard selectedLake={selectedLake} />
+          <SensorDashboard 
+            selectedLake={selectedLake} 
+            setRiskLevel={setRiskLevel} // Ensure risk level updates dynamically
+          />
         )}
         {activePage === 'sar' && (
           <div className="p-4">
@@ -48,28 +53,24 @@ function App() {
           </div>
         )}
         {activePage === 'dem' && (
-  <div className="p-4">
-    <h2 className="text-2xl font-semibold mb-4">DEM Analysis</h2>
-    <div className="w-full h-[100vh] border rounded-lg shadow-lg"> {/* Increased height */}
-      <iframe
-        src="https://dem-co2s.onrender.com/"
-        width="100%"
-        height="100%"
-        style={{ border: "none", borderRadius: "8px" }}
-        title="DEM Flow Simulation"
-        allowFullScreen
-      />
-    </div>
-  </div>
-)}
-
-
+          <div className="p-4">
+            <a href='http://localhost:8501' className="text-2xl font-semibold mb-4">DEM Analysis</a>
+            <div className="w-full h-[100vh] border rounded-lg shadow-lg">
+              <iframe
+                src="https://dem-co2s.onrender.com/" // http://localhost:8501
+                width="100%"
+                height="100%"
+                style={{ border: "none", borderRadius: "8px" }}
+                title="DEM Flow Simulation"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
         {activePage === 'camera' && (
           <div className="p-4">
             <h2 className="text-2xl font-semibold mb-4">Camera Interface</h2>
-            <div className="w-full h-[600px] border rounded-lg shadow-lg">
-              <CameraInterface />
-            </div>
+            <CameraInterface />
           </div>
         )}
       </main>

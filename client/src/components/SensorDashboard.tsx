@@ -7,12 +7,13 @@ import axios from "axios";
 
 interface SensorDashboardProps {
   selectedLake: string;
+  setRiskLevel: React.Dispatch<React.SetStateAction<"low" | "medium" | "high">>;
 }
 
-const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
+const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake, setRiskLevel }) => {
   const [latestSensor, setLatestSensor] = useState<any>(null);
   const [timeRange, setTimeRange] = useState("all");
-  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
+  const [riskLevel, setLocalRiskLevel] = useState<"low" | "medium" | "high">("medium");
   const [riskColor, setRiskColor] = useState<string>("bg-yellow-500");
   const [floatGraphData, setFloatGraphData] = useState<any[]>([]);
   const [shoreGraphData, setShoreGraphData] = useState<any[]>([]);
@@ -20,6 +21,31 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
   const [locationName, setLocationName] = useState<string>("");
   const [waterLevel, setWaterLevel] = useState<number>(0);
   const [waveAmplitude, setWaveAmplitude] = useState<number>(100);
+    let socket = new WebSocket("ws://192.168.196.71:81");
+
+    socket.onopen = function () {
+      console.log("Connected to ESP32 WebSocket");
+    };
+
+    socket.onerror = function (error) {
+      console.error("WebSocket Error:", error);
+    };
+
+    socket.onclose = function () {
+      console.log("WebSocket Disconnected. Attempting to reconnect...");
+      setTimeout(() => {
+        socket = new WebSocket("ws://192.168.196.71:81");
+      }, 3000);
+    };
+
+    function sendRiskLevel(level: "low" | "medium" | "high") {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(`RISK_LEVEL:${level}`);
+        console.log(`Sent risk level to ESP32: RISK_LEVEL:${level}`);
+      } else {
+        console.error("WebSocket not connected");
+      }
+    }
 
   // Update the calculateWaveHeight function to also set wave amplitude
   const calculateWaveHeight = (altitude: number) => {
@@ -115,8 +141,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
         sensorData.floatVelocity,
       ].map(value => isNaN(parseFloat(value)) ? 0 : parseFloat(value));
 
-      console.log("Features for prediction:", features); // Log features
-
       const response = await axios.post("https://glof-backend.onrender.com/predict", { features });
 
       const probabilities = response.data.probabilities; // Directly access array
@@ -129,10 +153,13 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
       const riskLabels: ("low" | "medium" | "high")[] = ["low", "medium", "high"];
       const maxIndex = probabilities.indexOf(Math.max(...probabilities));
       
-      setRiskLevel(riskLabels[maxIndex]);
+      const newRiskLevel = riskLabels[maxIndex];
+      setLocalRiskLevel(newRiskLevel);
+      setRiskLevel(newRiskLevel);
       
       const riskColors: { [key in "low" | "medium" | "high"]: string } = { low: "bg-green-500", medium: "bg-yellow-500", high: "bg-red-500" };
       setRiskColor(riskColors[riskLabels[maxIndex]]);
+      sendRiskLevel(riskLabels[maxIndex]);
     } catch (error) {
       console.error("Error fetching prediction:", error);
     }
@@ -370,7 +397,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = ({ selectedLake }) => {
               <AreaChart data={shoreGraphData} className="chart-container">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="time" stroke="#666" />
-                <YAxis stroke="#666" />
+                <YAxis stroke="#666" domain={[0, 1200]} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'white', 
