@@ -31,53 +31,53 @@ interface TrendData {
 }
 
 const SARPrediction: React.FC = () => {
-  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("low")
-  const [areaChange, setAreaChange] = useState(0.015) // km²
-  const [perimeterChange, setPerimeterChange] = useState(45.2) // m
-  const [glofChance, setGlofChance] = useState(65) // percentage
-  const [backscatterChange, setBackscatterChange] = useState(-2.3) // dB
-  const [coherenceChange, setCoherenceChange] = useState(-0.07) // 0-1
-  const [surfaceDisplacement, setSurfaceDisplacement] = useState(0.15) // m/day
-
-  // Enhanced historical image data with SAR-specific metrics
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("low");
+  const [areaChange, setAreaChange] = useState(0.005); // km² - reduced from 0.015
+  const [perimeterChange, setPerimeterChange] = useState(15.2); // m - reduced from 45.2
+  const [glofChance, setGlofChance] = useState(17); // percentage - reduced from 21
+  const [backscatterChange, setBackscatterChange] = useState(-1.1); // dB - less negative change
+  const [coherenceChange, setCoherenceChange] = useState(-0.02); // 0-1 - less reduction
+  const [surfaceDisplacement, setSurfaceDisplacement] = useState(0.05); // m/day - reduced from 0.15
+  
+  // Enhanced historical image data with SAR-specific metrics - adjusted for low risk
   const historicalImages: ImageData[] = [
     {
       date: "2025-02-25",
       path: "/sentinel1_2025-02-25_IW_VV.png",
-      area: 1.26,
-      perimeter: 4500,
-      backscatter: -15.2,
-      coherence: 0.78,
-      waterContent: 85,
+      area: 1.22, // reduced
+      perimeter: 4320, // reduced
+      backscatter: -11.2, // less negative
+      coherence: 0.89, // increased
+      waterContent: 65, // reduced
     },
     {
       date: "2025-02-22",
       path: "/sentinel1_2025-02-22_IW_VV.png",
-      area: 1.245,
-      perimeter: 4455,
-      backscatter: -12.9,
-      coherence: 0.82,
-      waterContent: 78,
+      area: 1.218, // smaller change
+      perimeter: 4310,
+      backscatter: -10.9,
+      coherence: 0.90,
+      waterContent: 64,
     },
     {
       date: "2025-02-13",
       path: "/sentinel1_2025-02-13_IW_VV.png",
-      area: 1.235,
-      perimeter: 4410,
-      backscatter: -11.6,
-      coherence: 0.85,
-      waterContent: 72,
+      area: 1.215,
+      perimeter: 4305,
+      backscatter: -10.6,
+      coherence: 0.91,
+      waterContent: 63,
     },
-  ]
-
-  // Time series data for trends
+  ];
+  
+  // Time series data for trends - adjusted for low risk
   const trendData: TrendData[] = [
-    { date: "2025-02-01", area: 1.22, perimeter: 4360, backscatter: -10.8 },
-    { date: "2025-02-10", area: 1.23, perimeter: 4390, backscatter: -11.2 },
-    { date: "2025-02-13", area: 1.235, perimeter: 4410, backscatter: -11.6 },
-    { date: "2025-02-22", area: 1.245, perimeter: 4455, backscatter: -12.9 },
-    { date: "2025-02-25", area: 1.26, perimeter: 4500, backscatter: -15.2 },
-  ]
+    { date: "2025-02-01", area: 1.21, perimeter: 4300, backscatter: -10.3 },
+    { date: "2025-02-10", area: 1.213, perimeter: 4303, backscatter: -10.5 },
+    { date: "2025-02-13", area: 1.215, perimeter: 4305, backscatter: -10.6 },
+    { date: "2025-02-22", area: 1.218, perimeter: 4310, backscatter: -10.9 },
+    { date: "2025-02-25", area: 1.22, perimeter: 4320, backscatter: -11.2 },
+  ];
 
   const riskColors = {
     low: "bg-green-500",
